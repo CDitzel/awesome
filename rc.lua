@@ -57,9 +57,13 @@ local function run_once(cmd_arr)
     end
 end
 
-run_once({ "urxvtd", "unclutter -root", "megasync" }) -- entries must be separated by commas
+run_once({"unclutter -root", "megasync", "google-chrome", "thunderbird", "discord"}) -- entries must be separated by commas
 
 awful.util.spawn_with_shell("pgrep -u $USER -x nm-applet > /dev/null || (nm-applet &)")
+
+awful.spawn.once("xfce4-power-manager") -- for lid closing -> hibernation
+--awful.spawn.single_instance("xfce4-power-manager") -- for lid closing -> hibernation
+
 
 
 -- This function implements the XDG autostart specification
@@ -105,11 +109,11 @@ awful.util.terminal = terminal
 awful.util.tagnames = { "emacs", "shell", "web", "mail", "misc" }
 awful.layout.layouts = {
     awful.layout.suit.floating,
-    awful.layout.suit.tile,
+   -- awful.layout.suit.tile,
+    awful.layout.suit.fair,
     --awful.layout.suit.tile.left,
     --awful.layout.suit.tile.bottom,
-    awful.layout.suit.tile.top,
-    --awful.layout.suit.fair,
+    --awful.layout.suit.tile.top,
     --awful.layout.suit.fair.horizontal,
     --awful.layout.suit.spiral,
     --awful.layout.suit.spiral.dwindle,
@@ -126,7 +130,7 @@ awful.layout.layouts = {
     --lain.layout.centerwork.horizontal,
     --lain.layout.termfair,
     --lain.layout.termfair.center,
-}	
+}
 
 awful.util.taglist_buttons = my_table.join(
     awful.button({ }, 1, function(t) t:view_only() end),
@@ -285,13 +289,13 @@ globalkeys = my_table.join(
     --          {description = "view  previous nonempty", group = "tag"}),
 
     -- Default client focus
-    awful.key({ altkey,           }, "n",
+    awful.key({ modkey,           }, "n",
         function ()
             awful.client.focus.byidx( 1)
         end,
         {description = "focus next by index", group = "client"}
     ),
-    awful.key({ altkey,           }, "p",
+    awful.key({ modkey,           }, "p",
         function ()
             awful.client.focus.byidx(-1)
         end,
@@ -438,19 +442,22 @@ globalkeys = my_table.join(
     --          {description = "show weather", group = "widgets"}),
 
     -- Brightness
-    awful.key({ altkey }, "Right", function () os.execute("xbacklight -inc 20") end,
+    awful.key({ altkey }, "Right", function () os.execute("xbacklight -inc 10") end,
               {description = "+10%", group = "hotkeys"}),
-    awful.key({ }, "XF86MonBrightnessUp", function () os.execute("xbacklight -inc 20") end,
+    awful.key({ }, "XF86MonBrightnessUp", function () os.execute("xbacklight -inc 10") end,
               {description = "+10%", group = "hotkeys"}),
-    awful.key({ altkey }, "Left", function () os.execute("xbacklight -dec 20") end,
+    awful.key({ altkey }, "Left", function () os.execute("xbacklight -dec 10") end,
               {description = "-10%", group = "hotkeys"}),
-    awful.key({ }, "XF86MonBrightnessDown", function () os.execute("xbacklight -dec 20") end,
+    awful.key({ }, "XF86MonBrightnessDown", function () os.execute("xbacklight -dec 10") end,
               {description = "-10%", group = "hotkeys"}),
     --awful.key({ altkey, "Left"}, "XF86MonBrightnessDown", function () os.execute("xbacklight -dec 10") end,
     --          {description = "-10%", group = "hotkeys"}),
 
+
+
+
     -- ALSA volume control
-    awful.key({ altkey }, "Up",
+    awful.key({ modkey }, "period",
         function ()
             os.execute(string.format("amixer -q set %s 10%%+", beautiful.volume.channel))
             beautiful.volume.update()
@@ -465,7 +472,7 @@ globalkeys = my_table.join(
         {description = "volume up", group = "hotkeys"}),
 
 
-    awful.key({ altkey }, "Down",
+    awful.key({ modkey }, "comma",
         function ()
             os.execute(string.format("amixer -q set %s 10%%-", beautiful.volume.channel))
             beautiful.volume.update()
@@ -478,13 +485,24 @@ globalkeys = my_table.join(
             beautiful.volume.update()
         end,
         {description = "volume down", group = "hotkeys"}),
- 
-   awful.key({ altkey }, "m",
-        function ()
-            os.execute(string.format("amixer -q set %s toggle", beautiful.volume.togglechannel or beautiful.volume.channel))
-            beautiful.volume.update()
-        end,
-        {description = "toggle mute", group = "hotkeys"}),
+
+   --awful.key({ altkey }, "m",
+     --   function ()
+       --     os.execute(string.format("amixer -q set %s toggle", beautiful.volume.togglechannel or beautiful.volume.channel))
+         --   beautiful.volume.update()
+        --end,
+        --{description = "toggle mute", group = "hotkeys"}),
+
+
+ awful.key({}, "XF86AudioMute", function ()
+     awful.util.spawn("amixer -D pulse set Master 1+ toggle", false)
+   end),
+
+awful.key({ modkey }, "slash", function ()
+     awful.util.spawn("amixer -D pulse set Master 1+ toggle", false)
+   end),
+
+
     awful.key({ altkey, "Control" }, "m",
         function ()
             os.execute(string.format("amixer -q set %s 100%%", beautiful.volume.channel))
@@ -550,6 +568,8 @@ globalkeys = my_table.join(
     awful.key({ modkey }, "a", function () awful.spawn(guieditor) end,
               {description = "run gui editor", group = "launcher"}),
 
+
+
     -- Default
     --[[ Menubar
     awful.key({ modkey }, "p", function() menubar.show() end,
@@ -587,6 +607,8 @@ globalkeys = my_table.join(
               {description = "lua execute prompt", group = "awesome"})
     --]]
 )
+
+app_folders = { "/usr/share/applications/", "~/.local/share/applications/" }
 
 clientkeys = my_table.join(
     awful.key({ altkey, "Shift"   }, "m",      lain.util.magnify_client,
@@ -726,8 +748,15 @@ awful.rules.rules = {
       properties = { titlebars_enabled = false } },
 
     -- Set Firefox to always map on the first tag on screen 1.
-    { rule = { class = "google-chrome" },
-      properties = { screen = 1, tag = awful.util.tagnames[1] } },
+    { rule = { instance = "google-chrome" },
+      properties = { screen = 1, tag = awful.util.tagnames[3] } },
+
+    { rule = { instance = "Thunderbird" },
+      properties = { screen = 1, tag = awful.util.tagnames[4] } },
+
+    { rule = { instance = "discord" },
+      properties = { screen = 1, tag = awful.util.tagnames[5] } },
+
 
     { rule = { class = "Gimp", role = "gimp-image-window" },
           properties = { maximized = true } },
@@ -813,9 +842,25 @@ function border_adjust(c)
 end
 
 client.connect_signal("property::maximized", border_adjust)
-client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
-client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
+client.connect_signal("focus", function(c) c.border_color =
+beautiful.border_focus c.opacity = 1  end)
+client.connect_signal("unfocus", function(c) c.border_color =
+beautiful.border_normal  c.opacity = 0.7 end)
 
 -- possible workaround for tag preservation when switching back to default screen:
 -- https://github.com/lcpz/awesome-copycats/issues/251
 -- }}}
+
+
+-- Autorun programs in Awesome WM
+autorun = true
+autorunApps =
+{
+   "xfce4-power-manager",
+
+}
+if autorun then
+   for app = 1, #autorunApps do
+       awful.util.spawn(autorunApps[app])
+   end
+end
