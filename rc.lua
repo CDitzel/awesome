@@ -303,12 +303,12 @@ globalkeys = my_table.join(
     ),
 
     -- By direction client focus
-    awful.key({ modkey }, "j",
-        function()
-            awful.client.focus.global_bydirection("down")
-            if client.focus then client.focus:raise() end
-        end,
-        {description = "focus down", group = "client"}),
+    --awful.key({ modkey }, "j",
+    --    function()
+    --        awful.client.focus.global_bydirection("Rdown")
+    --        if client.focus then client.focus:raise() end
+    --    end,
+    --    {description = "focus down", group = "client"}),
     awful.key({ modkey }, "k",
         function()
             awful.client.focus.global_bydirection("up")
@@ -751,7 +751,7 @@ awful.rules.rules = {
     { rule = { instance = "google-chrome" },
       properties = { screen = 1, tag = awful.util.tagnames[3] } },
 
-    { rule = { instance = "Thunderbird" },
+    { rule = { instance = "tmodhunderbird" },
       properties = { screen = 1, tag = awful.util.tagnames[4] } },
 
     { rule = { instance = "discord" },
